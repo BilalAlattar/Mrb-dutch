@@ -1,0 +1,12 @@
+{
+  "name": "taallam-met-mr-b",
+  "version": "1.0.0",
+  "private": true,
+  "description": "تعلم مع Mr.B — تطبيق ويب لتعلّم اللغة الهولندية من A0 إلى B1 عبر 25 موضوعاً ومعلّم AI",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
