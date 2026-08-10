@@ -10,13 +10,13 @@ mrb-dutch-tutor/
 ├── style.css          التنسيقات
 ├── app.js             منطق التطبيق بالكامل (JavaScript عادي، بدون مكتبات)
 ├── api/
-│   └── chat.js         دالة خادم (Vercel Serverless Function) تتواصل مع Anthropic API
+│   └── chat.js         دالة خادم (Vercel Serverless Function) تتواصل مع Gemini API
 ├── package.json
 ├── .env.example
 └── .gitignore
 ```
 
-المحادثة والاختبارات تُرسل من المتصفح إلى `/api/chat`، وهذه الدالة (تعمل على السيرفر فقط) هي من تتصل بـ Anthropic API باستخدام مفتاحك السري. المفتاح لا يظهر أبداً في كود المتصفح.
+المحادثة والاختبارات تُرسل من المتصفح إلى `/api/chat`، وهذه الدالة (تعمل على السيرفر فقط) هي من تتصل بـ Gemini API (Google) باستخدام مفتاحك السري. المفتاح لا يظهر أبداً في كود المتصفح.
 
 التقدّم (المستوى، المواضيع المكتملة، سجل كل محادثة) يُحفظ في `localStorage` الخاص بالمتصفح على جهاز المستخدم.
 
@@ -27,9 +27,9 @@ mrb-dutch-tutor/
    ```
    npm install -g vercel
    ```
-3. أنشئ ملف `.env` بنفس شكل `.env.example` وضع فيه مفتاح Anthropic الخاص بك:
+3. احصل على مفتاح Gemini مجاني من [Google AI Studio](https://aistudio.google.com/apikey) (تسجيل دخول بحساب Google، بدون بطاقة دفع)، ثم أنشئ ملف `.env` بنفس شكل `.env.example` وضع فيه المفتاح:
    ```
-   ANTHROPIC_API_KEY=sk-ant-...
+   GEMINI_API_KEY=AIza...
    ```
 4. شغّل بيئة التطوير المحلية (تحاكي بيئة Vercel بما فيها دوال `api/`):
    ```
@@ -48,7 +48,7 @@ vercel
 ```
 ثم أضف متغير البيئة (مرة واحدة فقط):
 ```
-vercel env add ANTHROPIC_API_KEY
+vercel env add GEMINI_API_KEY
 ```
 وأعد النشر للإنتاج:
 ```
@@ -58,12 +58,16 @@ vercel --prod
 **الخيار الثاني — عبر GitHub:**
 1. ارفع المجلد إلى مستودع GitHub جديد.
 2. من [vercel.com](https://vercel.com) اختر "Add New Project" واربطه بالمستودع.
-3. في إعدادات المشروع على Vercel، أضف متغير البيئة `ANTHROPIC_API_KEY` بقيمة مفتاحك.
+3. في إعدادات المشروع على Vercel، أضف متغير البيئة `GEMINI_API_KEY` بقيمة مفتاحك (المُنشأ من [Google AI Studio](https://aistudio.google.com/apikey)).
 4. اضغط Deploy.
 
 ## ملاحظة أمنية
 
-لا تضع مفتاح `ANTHROPIC_API_KEY` أبداً داخل `app.js` أو أي ملف يصل إليه المتصفح مباشرة؛ ضعه فقط كمتغير بيئة على الخادم (Vercel) كما هو موضح أعلاه.
+لا تضع مفتاح `GEMINI_API_KEY` أبداً داخل `app.js` أو أي ملف يصل إليه المتصفح مباشرة؛ ضعه فقط كمتغير بيئة على الخادم (Vercel) كما هو موضح أعلاه.
+
+## ملاحظة حول الحد المجاني (Free tier)
+
+مفاتيح Google AI Studio لها حصة استخدام مجانية يومية/دقيقة محدودة (Rate limits) قد تتغيّر بحسب سياسة Google. إذا واجهت خطأ بسبب تجاوز الحصة، انتظر قليلاً أو راجع [حدود الاستخدام الحالية](https://ai.google.dev/gemini-api/docs/rate-limits).
 
 ---
 © جميع الحقوق محفوظة لمبرمج الموقع Mr.B @2026

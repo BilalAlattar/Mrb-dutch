@@ -1,14 +1,14 @@
-// Vercel Serverless Function — proxies chat/test requests to the Anthropic API.
-// The API key stays on the server (ANTHROPIC_API_KEY env var) and is never sent to the browser.
+// Vercel Serverless Function — proxies chat/test requests to the Gemini API.
+// The API key stays on the server (GEMINI_API_KEY env var) and is never sent to the browser.
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: 'ANTHROPIC_API_KEY is not configured on the server' });
+    res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' });
     return;
   }
 
@@ -19,20 +19,22 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: system || undefined,
-        messages,
-      }),
-    });
+    const contents = messages.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+        }),
+      }
+    );
 
     const data = await response.json();
 
@@ -41,8 +43,9 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const textBlock = (data.content || []).find((b) => b.type === 'text');
-    res.status(200).json({ text: textBlock ? textBlock.text : '' });
+    const parts = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+    const text = parts.map((p) => p.text || '').join('');
+    res.status(200).json({ text });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Unknown server error' });
   }
