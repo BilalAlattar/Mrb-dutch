@@ -119,8 +119,19 @@ async function callClaude(system, messages){
     body: JSON.stringify({ system, messages })
   });
   const data = await response.json();
-  if(!response.ok){ throw new Error((data && data.error) || 'request failed'); }
+  if(!response.ok){
+    console.error('callClaude failed', response.status, data && data.error);
+    const err = new Error(errorMessageFor(response.status, data && data.error));
+    err.status = response.status;
+    throw err;
+  }
   return data.text || '';
+}
+
+function errorMessageFor(status, errBody){
+  if(status===429) return 'تجاوزت الحد المسموح من الطلبات على الحصة المجانية مؤقتاً. انتظر دقيقة وحاول مرة أخرى.';
+  const nested = errBody && errBody.error;
+  return (nested && nested.message) || (typeof errBody==='string' ? errBody : 'request failed');
 }
 
 function themeSystemPrompt(theme){
@@ -393,7 +404,8 @@ async function kickoffChat(theme){
     state.chatMessages.push({role:'assistant', content: reply || '...'});
     saveChat(theme.id, state.chatMessages);
   }catch(e){
-    state.chatMessages.push({role:'assistant', content:'(تعذر بدء المحادثة، جرّب إرسال رسالة)'});
+    console.error('kickoffChat failed', e);
+    state.chatMessages.push({role:'assistant', content:'(تعذر بدء المحادثة: '+e.message+')'});
   }
   state.chatBusy = false;
   render();
@@ -447,7 +459,8 @@ async function sendChat(theme, text){
     state.chatMessages.push({role:'assistant', content: reply || '...'});
     saveChat(theme.id, state.chatMessages);
   }catch(e){
-    state.chatMessages.push({role:'assistant', content:'(حدث خطأ في الاتصال، حاول مرة أخرى)'});
+    console.error('sendChat failed', e);
+    state.chatMessages.push({role:'assistant', content:'(حدث خطأ: '+e.message+')'});
   }
   state.chatBusy = false;
   render();
@@ -461,6 +474,7 @@ async function startTest(theme){
   try{
     state.testData = await generateThemeTest(theme);
   }catch(e){
+    console.error('generateThemeTest failed', e);
     state.testData = 'error';
   }
   render();
